@@ -1,5 +1,5 @@
 [package]
-name = "HelloRust"
+name = "quick_sort"
 version = "0.1.0"
 authors = ["Grzdaczek <47788277+Grzdaczek@users.noreply.github.com>"]
 edition = "2018"
