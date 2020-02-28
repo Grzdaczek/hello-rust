@@ -1,0 +1,11 @@
+[package]
+name = "mandelbrot_set"
+version = "0.1.0"
+authors = ["Grzdaczek <47788277+Grzdaczek@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+image = "0.23.0"
+num-complex = "0.2"
