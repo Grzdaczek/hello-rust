@@ -1,15 +1,25 @@
 extern crate image;
 extern crate num_complex;
 
-const WIDTH: u32 = 2000;
-const HEIGHT: u32 = 2000;
+const WIDTH: u32 = 1920 * 1;
+const HEIGHT: u32 = 1080 * 1;
 
-const X: f32 = -0.909;
-const Y: f32 = 0.275;
-const ZOOM: f32 = WIDTH as f32 * 7.0;
+// const X: f32 = -0.909;
+// const Y: f32 = 0.275;
+// const ZOOM: f32 = WIDTH as f32 * 7.0;
+
 // const X: f32 = -0.5;
 // const Y: f32 = 0.0;
-// const ZOOM: f32 = WIDTH as f32 * 0.4;
+// const ZOOM: f32 = WIDTH as f32 * 0.2;
+
+// -1.6273675079145447,"y":-0.002533474884632125},"zoom":1209507.4055307142}
+const X: f32 = -1.6273675079145447;
+const Y: f32 = -0.002533474884632125;
+const ZOOM: f32 = WIDTH as f32 * 5000.0;
+
+// const X: f32 = 0.0;
+// const Y: f32 = 0.0;
+// const ZOOM: f32 = WIDTH as f32 * 0.25;
 
 const X_SPAN: f32 = WIDTH as f32 / 2.0 / ZOOM;
 const Y_SPAN: f32 = HEIGHT as f32 / 2.0 / ZOOM;
@@ -19,40 +29,85 @@ const X_MAX: f32 = X + X_SPAN;
 const Y_MIN: f32 = Y - Y_SPAN;
 const Y_MAX: f32 = Y + Y_SPAN;
 
-const I_MAX: f32 = 5000.0;
+// const I_MAX: f32 = 3000.0;
+const I_MAX: f32 = 100.0;
 
 fn main() {
 
 	let mut imgbuf = image::ImageBuffer::new(WIDTH, HEIGHT);
-	let mut progress = 0.0;
+	let pixels = fractal_pixels();
 
-	for (_x, _y, pixel) in imgbuf.enumerate_pixels_mut() {
-		let x = ( X_MAX - X_MIN ) / (WIDTH as f32) * ( _x as f32 - 0.0) + X_MIN;
-		let y = ( Y_MAX - Y_MIN ) / (HEIGHT as f32) * (HEIGHT - _y) as f32 * (1.0) + Y_MIN;
-		
-		// fractal iterations for complex value (x + yi)
-		let i = iterate(x, y, 0.0, 0.0);
-			// let i = fractal(-0.7269, 0.1889, x, y);
-
-		// color generation
-		let hue: f32 = (360.0 * i / I_MAX) as f32;
-		let sat: f32 = 1.0;
-		let val: f32 = if i < I_MAX { 1.0 } else { 0.0 };
-		let (r, g, b) = hsv_to_rgb(hue, sat, val);
+	for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+		let i = x * HEIGHT + y;
+		let (r, g, b) = pixels[i as usize];
+		// println!("{:?}", (r, g, b));
 		*pixel = image::Rgb([r, g, b]);
+	}
 
+	imgbuf.save("fractal.png").unwrap();
+	println!("100%");
+}
+
+fn fractal_pixels() -> Vec<(u8, u8, u8)> {
+	let mut set: Vec<f32> = vec![];
+	let mut progress = 0.0;
+	let mut histogram = [0u32; I_MAX as usize];
+	let mut total = 0u32;
+
+	for _x in 0..WIDTH {
+		for _y in 0..HEIGHT {
+			
+			let x = ( X_MAX - X_MIN ) / (WIDTH as f32) * ( _x as f32 - 0.0) + X_MIN;
+			let y = ( Y_MAX - Y_MIN ) / (HEIGHT as f32) * (HEIGHT - _y) as f32 * (1.0) + Y_MIN;
+			
+			// fractal iterations for complex value (x + yi)
+			let i = fractal_point(x, y, 0.0, 0.0);
+			// let i = fractal_point(-0.7269, 0.1889, x, y);
+			// let i = fractal_point(-0.8, 0.156, x, y);
+			// let i = fractal_point(-0.4, 0.6, x, y);
+
+			// add to histogram
+			if i < I_MAX {
+				histogram[i.floor() as usize] += 1;
+				total += 1;
+			}
+			
+			
+			set.push(i);
+		}
+		
 		// progress logging
-		let p = (_y + 1) as f32 / HEIGHT as f32 * 100.0;
-		if progress <= p && p % 1.0 == 0.0 {
+		let p = _x as f32 / WIDTH as f32 * 100.0;
+		if progress + 1.0 <= p {
 			println!("{}%", progress);
 			progress += 1.0;
 		}
 	}
 
-	imgbuf.save("fractal.png").unwrap();
+	let mut pixels: Vec<(u8, u8, u8)> = vec![];
+	let mut hues: Vec<f32> = vec![];
+	let mut h = 0f32;
+
+	for x in 0..I_MAX as usize {
+		h += histogram[x] as f32 / total as f32;
+		hues.push(h);
+	}
+	hues.push(h);
+
+	for x in 0..set.len() as usize {
+		let i = set[x];
+		let c1 = hues[i.floor() as usize];
+		let c2 = hues[i.ceil() as usize];
+		let t = i % 1.0;
+		let hue: f32 = 360.0 - 360.0 * ( c1 * (1.0 - t) + c2 * t);
+		let sat: f32 = 1.0;
+		let val: f32 = if i < I_MAX { 1.0 } else { 0.0 };
+		pixels.push(hsv_to_rgb(hue, sat, val));
+	}
+	return pixels;
 }
 
-fn iterate(c_re: f32, c_im: f32, z_re: f32, z_im: f32) -> f32 {
+fn fractal_point(c_re: f32, c_im: f32, z_re: f32, z_im: f32) -> f32 {
 	let c = num_complex::Complex::new(c_re, c_im);
 	let mut z = num_complex::Complex::new(z_re, z_im);
 	let mut i: f32 = 0.0;
