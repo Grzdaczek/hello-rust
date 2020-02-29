@@ -4,22 +4,9 @@ extern crate num_complex;
 const WIDTH: u32 = 1920 * 1;
 const HEIGHT: u32 = 1080 * 1;
 
-// const X: f32 = -0.909;
-// const Y: f32 = 0.275;
-// const ZOOM: f32 = WIDTH as f32 * 7.0;
-
-// const X: f32 = -0.5;
-// const Y: f32 = 0.0;
-// const ZOOM: f32 = WIDTH as f32 * 0.2;
-
-// -1.6273675079145447,"y":-0.002533474884632125},"zoom":1209507.4055307142}
-const X: f32 = -1.6273675079145447;
-const Y: f32 = -0.002533474884632125;
-const ZOOM: f32 = WIDTH as f32 * 5000.0;
-
-// const X: f32 = 0.0;
-// const Y: f32 = 0.0;
-// const ZOOM: f32 = WIDTH as f32 * 0.25;
+const X: f32 = -0.5;
+const Y: f32 = 0.0;
+const ZOOM: f32 = WIDTH as f32 * 0.2;
 
 const X_SPAN: f32 = WIDTH as f32 / 2.0 / ZOOM;
 const Y_SPAN: f32 = HEIGHT as f32 / 2.0 / ZOOM;
@@ -29,8 +16,7 @@ const X_MAX: f32 = X + X_SPAN;
 const Y_MIN: f32 = Y - Y_SPAN;
 const Y_MAX: f32 = Y + Y_SPAN;
 
-// const I_MAX: f32 = 3000.0;
-const I_MAX: f32 = 100.0;
+const I_MAX: f32 = 3000.0;
 
 fn main() {
 
@@ -62,9 +48,6 @@ fn fractal_pixels() -> Vec<(u8, u8, u8)> {
 			
 			// fractal iterations for complex value (x + yi)
 			let i = fractal_point(x, y, 0.0, 0.0);
-			// let i = fractal_point(-0.7269, 0.1889, x, y);
-			// let i = fractal_point(-0.8, 0.156, x, y);
-			// let i = fractal_point(-0.4, 0.6, x, y);
 
 			// add to histogram
 			if i < I_MAX {
